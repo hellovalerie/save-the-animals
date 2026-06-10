@@ -1,7 +1,0 @@
-{
-  "name": "beat-the-teacher",
-  "private": true,
-  "scripts": {
-    "start": "npx vite"
-  }
-}
