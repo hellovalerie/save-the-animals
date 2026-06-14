@@ -1,12 +1,13 @@
 const TTS_BASE = "https://fish-audio-399049857363-ap-southeast-1-an.s3.ap-southeast-1.amazonaws.com/tts/";
 
-export function createSpeaker(clips, { lang = "en" } = {}) {
+export function createSpeaker(clips, { lang = "en", rate = lang === "zh" ? 0.8 : 1 } = {}) {
   const player = typeof Audio !== "undefined" ? new Audio() : null;
   let queue = [];
 
   function playNext() {
     const url = queue.shift();
     if (!url || !player) return;
+    player.playbackRate = rate;
     player.src = url;
     player.onended = playNext;
     player.play().catch(() => {});
@@ -22,9 +23,9 @@ export function createSpeaker(clips, { lang = "en" } = {}) {
         queue.push(TTS_BASE + key + ".mp3");
       } else if (window.speechSynthesis) {
         const utt = new SpeechSynthesisUtterance(text);
+        utt.rate = rate;
         if (lang === "zh") {
           utt.lang = "zh-CN";
-          utt.rate = 0.8;
           utt.pitch = 1;
           const trySpeak = () => {
             const voices = window.speechSynthesis.getVoices();
@@ -45,7 +46,6 @@ export function createSpeaker(clips, { lang = "en" } = {}) {
             trySpeak();
           }
         } else {
-          utt.rate = 0.82;
           utt.pitch = 1.08;
           utt.volume = 1;
           window.speechSynthesis.speak(utt);
