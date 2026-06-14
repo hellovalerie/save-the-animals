@@ -22,8 +22,10 @@ if (!MCP_TOKEN) {
   process.exit(1);
 }
 
-const animalsPath = new URL("../save-the-animals/save-the-animals.html", import.meta.url);
-const beatPath = new URL("../beat-the-teacher/beat-the-teacher.jsx", import.meta.url);
+const animalsDataPath = new URL("../src/save-the-animals/data.js", import.meta.url);
+const beatDataPath    = new URL("../src/beat-the-teacher/data.js",  import.meta.url);
+const animalsManifestPath = new URL("../src/save-the-animals/tts-manifest.js", import.meta.url);
+const beatManifestPath    = new URL("../src/beat-the-teacher/tts-manifest.js",  import.meta.url);
 
 function extractLiteral(source, pattern, label) {
   const match = source.match(pattern);
@@ -33,10 +35,10 @@ function extractLiteral(source, pattern, label) {
 
 // ----- collect spoken strings -----
 
-const animalsHtml = await readFile(animalsPath, "utf8");
-const WORD_DATA = extractLiteral(animalsHtml, /const WORD_DATA = (\{[\s\S]*?\n\});/, "WORD_DATA");
-const ANIMALS = extractLiteral(animalsHtml, /const ANIMALS = (\[[\s\S]*?\n\]);/, "ANIMALS");
-const genericPraise = extractLiteral(animalsHtml, /const genericPraise = (\[[\s\S]*?\n  \]);/, "genericPraise");
+const animalsData = await readFile(animalsDataPath, "utf8");
+const WORD_DATA = extractLiteral(animalsData, /export const WORD_DATA = (\{[\s\S]*?\n\});/, "WORD_DATA");
+const ANIMALS = extractLiteral(animalsData, /export const ANIMALS = (\[[\s\S]*?\n\]);/, "ANIMALS");
+const genericPraise = extractLiteral(animalsData, /export const genericPraise = (\[[\s\S]*?\n\]);/, "genericPraise");
 
 const enTexts = new Set();
 for (const word of Object.keys(WORD_DATA)) {
@@ -55,13 +57,13 @@ for (const a of ANIMALS) {
 }
 for (const title of ["PERFECT!", "Super Star!", "Great Job!", "Good Try!"]) enTexts.add(title);
 
-const beatJsx = await readFile(beatPath, "utf8");
-const WORDS = extractLiteral(beatJsx, /const WORDS = (\[[\s\S]*?\n\]);/, "WORDS");
+const beatData = await readFile(beatDataPath, "utf8");
+const WORDS = extractLiteral(beatData, /export const WORDS = (\[[\s\S]*?\n\]);/, "WORDS");
 
 const zhTexts = new Set();
 for (const w of WORDS) {
-  zhTexts.add(w.chinese);          // english / chinese / nightmare modes
-  zhTexts.add(w.chinese[0]);       // radical mode + fill-the-blank prompt
+  zhTexts.add(w.chinese);       // english / chinese / nightmare modes
+  zhTexts.add(w.chinese[0]);    // radical mode + fill-the-blank prompt
 }
 
 // ----- synthesize -----
@@ -128,9 +130,9 @@ const zhUrls = await generateAll(zhTexts, ZH_VOICE, "zh");
 
 // ----- inject manifests -----
 
-function toManifest(urls) {
-  let base = null;
+function toClips(urls) {
   const clips = {};
+  let base = null;
   for (const [text, url] of urls) {
     const slash = url.lastIndexOf("/") + 1;
     const urlBase = url.slice(0, slash);
@@ -138,24 +140,30 @@ function toManifest(urls) {
     if (urlBase !== base) throw new Error(`URL base mismatch: ${url}`);
     clips[text] = url.slice(slash).replace(/\.mp3$/, "");
   }
-  return { base, clips };
+  return clips;
 }
 
-function inject(source, { base, clips }) {
+function injectManifest(source, clips) {
   const entries = Object.keys(clips)
     .sort()
     .map((text) => `  ${JSON.stringify(text)}: ${JSON.stringify(clips[text])},`)
     .join("\n");
   const block =
     `// === FISH TTS MANIFEST START (auto-generated — do not edit by hand) ===\n` +
-    `const TTS_BASE = ${JSON.stringify(base)};\n` +
-    `const TTS_CLIPS = {\n${entries}\n};\n` +
+    `export const TTS_CLIPS = {\n${entries}\n};\n` +
     `// === FISH TTS MANIFEST END ===`;
   const pattern = /\/\/ === FISH TTS MANIFEST START[\s\S]*?\/\/ === FISH TTS MANIFEST END ===/;
   if (!pattern.test(source)) throw new Error("Manifest markers not found");
   return source.replace(pattern, block);
 }
 
-await writeFile(animalsPath, inject(animalsHtml, toManifest(enUrls)));
-await writeFile(beatPath, inject(beatJsx, toManifest(zhUrls)));
-console.log("Manifests injected into both game sources.");
+const enClips = toClips(enUrls);
+const zhClips = toClips(zhUrls);
+
+const animalsManifest = await readFile(animalsManifestPath, "utf8");
+await writeFile(animalsManifestPath, injectManifest(animalsManifest, enClips));
+
+const beatManifest = await readFile(beatManifestPath, "utf8");
+await writeFile(beatManifestPath, injectManifest(beatManifest, zhClips));
+
+console.log("Manifests injected into both tts-manifest.js files.");
