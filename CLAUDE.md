@@ -19,12 +19,13 @@ src/
     data.js                 — WORD_DATA, ANIMALS, MASCOTS, genericPraise
     tts-manifest.js         — English TTS clip manifest (auto-generated)
     styles.css              — All game CSS including Google Fonts import
-    main.js                 — Vanilla JS game logic
+    App.jsx                 — React component for the full sight words game
+    main.jsx                — createRoot entry point
 
 beat-the-teacher/
   index.html                — HTML entry for Vite (mounts #root, loads main.jsx)
 save-the-animals/
-  index.html                — HTML entry for Vite (full DOM, loads main.js)
+  index.html                — HTML entry for Vite (mounts #root, loads main.jsx)
 index.html                  — Landing page linking to both games
 
 scripts/
@@ -44,7 +45,7 @@ React 18 app. `src/beat-the-teacher/App.jsx` imports from `data.js` and `tts-man
 - `speak` — module-level, created by `createSpeaker(TTS_CLIPS, { lang: "zh" })`
 
 ### save-the-animals
-Vanilla JS (not React). `src/save-the-animals/main.js` imports data and the shared TTS factory. Key data:
+React 18 app. `src/save-the-animals/App.jsx` imports data and the shared TTS factory. Key data:
 - `WORD_DATA` — ~100 English sight words with `{ chunks: [...], hint: '...' }`
 - `ANIMALS` / `MASCOTS` — cosmetic game data
 - Persistence via `localStorage` (`sightwords_flagged_v1`, `sightwords_rounds_v1`)
@@ -84,7 +85,7 @@ Live routes:
 - `/save-the-animals/` — English sight words game
 - `/beat-the-teacher/` — Chinese vocabulary game
 
-Tech stack: Vite + React 18 (JSX plugin) + vanilla JS. Build output goes to `dist/` (git-ignored).
+Tech stack: Vite + React 18. Build output goes to `dist/` (git-ignored).
 
 Build locally:
 

@@ -50,7 +50,7 @@ h1{font-family:'Fredoka One',cursive;font-size:clamp(2rem,9vw,2.8rem);color:#fff
 .btn-start:active{transform:translateY(4px);box-shadow:0 2px 0 #5a3fa0;}
 
 /* ===== PARENT PANEL (in picker) ===== */
-#parentPanel,#gameParentPanel{width:100%;background:rgba(255,255,255,.93);border-radius:22px;padding:18px 18px 16px;box-shadow:0 4px 20px rgba(0,0,0,.13);border:3px solid #ffd0a0;display:none;animation:popIn .3s ease;}
+#parentPanel,#gameParentPanel,#revParentPanel{width:100%;background:rgba(255,255,255,.93);border-radius:22px;padding:18px 18px 16px;box-shadow:0 4px 20px rgba(0,0,0,.13);border:3px solid #ffd0a0;display:none;animation:popIn .3s ease;}
 .parent-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
 .parent-title{font-family:'Fredoka One',cursive;font-size:1.2rem;color:#7a4000;}
 .parent-close{background:none;border:none;font-size:1.4rem;cursor:pointer;color:#a07040;padding:4px 8px;border-radius:8px;}
